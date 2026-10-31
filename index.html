@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UPSC Prelims Master Engine • GS-1 & CSAT Mock Platform</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['Cinzel', 'serif'],
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          },
+          colors: {
+            upsc: {
+              navy: '#0f2963',
+              blue: '#1d4ed8',
+              lightBlue: '#eff6ff',
+              paper: '#ffffff',
+              card: '#f8fafc',
+              border: '#e2e8f0',
+              correct: '#15803d',
+              correctBg: '#f0fdf4',
+              wrong: '#b91c1c',
+              wrongBg: '#fef2f2'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom Scrollbars */
+    .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* OMR Bubble Sheet Styling */
+    .omr-bubble {
+      width: 26px;
+      height: 26px;
+      border-radius: 9999px;
+      border: 1.5px solid #64748b;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: #334155;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+      background: #ffffff;
+    }
+    .omr-bubble:hover {
+      border-color: #1d4ed8;
+      background: #eff6ff;
+    }
+    .omr-bubble.filled {
+      background: #0f2963 !important;
+      border-color: #0f2963 !important;
+      color: #ffffff !important;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+    }
+    .omr-bubble.correct-bubble {
+      background: #16a34a !important;
+      border-color: #15803d !important;
+      color: #ffffff !important;
+    }
+    .omr-bubble.wrong-bubble {
+      background: #dc2626 !important;
+      border-color: #b91c1c !important;
+      color: #ffffff !important;
+    }
+  </style>
+</head>
+<body class="bg-[#f8fafc] text-blue-950 font-sans min-h-screen flex flex-col selection:bg-blue-200 selection:text-blue-900">
+
+  <!-- Top Navigation Bar -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Brand & Mode -->
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-lg bg-blue-900 text-white flex items-center justify-center font-serif text-lg font-bold shadow-md shadow-blue-900/20">
+          UPSC
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="font-serif font-bold text-blue-950 text-base sm:text-lg tracking-wide uppercase">Prelims Practice & Mock Portal</h1>
+            <span id="headerPaperBadge" class="bg-blue-100 text-blue-800 text-[11px] font-bold px-2 py-0.5 rounded-full border border-blue-200 font-mono">
+              GS Paper-1
+            </span>
+          </div>
+          <p class="text-xs text-slate-500">Free, Local, & BYOK (Gemini AI-Powered) UPSC Prelims Platform</p>
+        </div>
+      </div>
+
+      <!-- Action Items & Timer -->
+      <div class="flex items-center space-x-2 sm:space-x-3">
+        
+        <!-- Live Timer Badge -->
+        <div id="timerContainer" class="flex items-center space-x-1.5 bg-slate-100 border border-slate-300 px-3 py-1.5 rounded-lg font-mono text-sm shadow-inner">
+          <span class="text-xs uppercase text-slate-500 font-sans font-semibold">Time:</span>
+          <span id="timerText" class="font-bold text-blue-900 text-base">02:00:00</span>
+        </div>
+
+        <!-- AI Generator Button -->
+        <button onclick="openAiGeneratorModal()" class="flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition shadow-sm">
+          <span>✨</span>
+          <span class="hidden sm:inline">AI Question Gen</span>
+        </button>
+
+        <!-- Configuration Settings Button -->
+        <button onclick="openSettingsModal()" class="p-2 rounded-lg text-slate-600 hover:text-blue-900 hover:bg-slate-100 border border-slate-200 transition" title="Settings & API Key">
+          ⚙️
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Sub-Header: Mode & Subject Filter Strip -->
+  <nav class="bg-white border-b border-slate-200 px-4 sm:px-6 py-2 text-xs">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center space-x-2 overflow-x-auto py-1">
+        <span class="text-slate-500 font-medium">Select Subject:</span>
+        <button onclick="filterBySubject('ALL')" class="sub-filter-btn px-2.5 py-1 rounded-md font-semibold bg-blue-900 text-white" data-filter="ALL">All Subjects</button>
+        <button onclick="filterBySubject('Polity')" class="sub-filter-btn px-2.5 py-1 rounded-md font-medium text-slate-700 bg-slate-100 hover:bg-slate-200" data-filter="Polity">Polity & Governance</button>
+        <button onclick="filterBySubject('History')" class="sub-filter-btn px-2.5 py-1 rounded-md font-medium text-slate-700 bg-slate-100 hover:bg-slate-200" data-filter="History">Modern & Ancient History</button>
+        <button onclick="filterBySubject('Economy')" class="sub-filter-btn px-2.5 py-1 rounded-md font-medium text-slate-700 bg-slate-100 hover:bg-slate-200" data-filter="Economy">Economy</button>
+        <button onclick="filterBySubject('Geography')" class="sub-filter-btn px-2.5 py-1 rounded-md font-medium text-slate-700 bg-slate-100 hover:bg-slate-200" data-filter="Geography">Geography & Env</button>
+        <button onclick="filterBySubject('CSAT-RC')" class="sub-filter-btn px-2.5 py-1 rounded-md font-medium text-slate-700 bg-slate-100 hover:bg-slate-200" data-filter="CSAT-RC">CSAT Comprehension</button>
+        <button onclick="filterBySubject('CSAT-Quant')" class="sub-filter-btn px-2.5 py-1 rounded-md font-medium text-slate-700 bg-slate-100 hover:bg-slate-200" data-filter="CSAT-Quant">CSAT Quant & Reasoning</button>
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <span id="studyModeBadge" class="px-2 py-0.5 rounded font-mono font-bold text-[11px] bg-emerald-50 text-emerald-800 border border-emerald-200">
+          Bit-by-Bit Mode
+        </span>
+        <button onclick="toggleOMRView()" id="omrToggleBtn" class="px-2.5 py-1 rounded font-semibold text-xs border border-blue-600 bg-blue-50 text-blue-700 hover:bg-blue-100 transition">
+          📝 Toggle OMR Sheet
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main View Grid -->
+  <main class="max-w-7xl w-full mx-auto p-4 sm:p-6 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- Left Column: Question Paper & Interactive Item (7 or 8 cols) -->
+    <section class="lg:col-span-7 xl:col-span-8 flex flex-col space-y-4">
+      
+      <!-- Top Action & Meta Information Bar -->
+      <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center space-x-2">
+          <span id="currentQNumTag" class="bg-blue-900 text-white font-mono font-bold text-xs px-2.5 py-1 rounded-md shadow-sm">
+            Q.1 / 10
+          </span>
+          <span id="questionSubjectTag" class="bg-slate-100 text-blue-950 font-semibold text-xs px-2.5 py-1 rounded-md border border-slate-200">
+            Indian Polity
+          </span>
+          <span id="questionMarksTag" class="font-mono text-xs text-slate-500">
+            +2.00 / -0.66
+          </span>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <button id="markReviewBtn" onclick="toggleReviewCurrent()" class="text-xs px-3 py-1 rounded-md font-semibold border border-purple-300 text-purple-700 bg-purple-50 hover:bg-purple-100 transition flex items-center space-x-1">
+            <span>🔖</span>
+            <span id="reviewBtnText">Mark for Review</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Question Card Container -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm flex-1 flex flex-col justify-between">
+        
+        <div>
+          <!-- Question Passage or Context (e.g. for CSAT) -->
+          <div id="passageContainer" class="hidden mb-4 p-4 rounded-xl bg-slate-50 border-l-4 border-blue-600 text-slate-800 text-xs sm:text-sm leading-relaxed custom-scroll max-h-56 overflow-y-auto">
+            <!-- Dynamic passage -->
+          </div>
+
+          <!-- Main Question Stem -->
+          <div id="questionStem" class="text-blue-950 text-base sm:text-lg font-normal leading-relaxed mb-6">
+            Loading Question...
+          </div>
+
+          <!-- Multiple Choice Options (A, B, C, D) -->
+          <div id="optionsContainer" class="space-y-3 mb-6">
+            <!-- Dynamic Options Injected here -->
+          </div>
+        </div>
+
+        <!-- Comprehensive Solution Box -->
+        <div id="solutionBox" class="hidden mt-6 bg-[#f8fafc] border border-blue-200 rounded-xl p-5 text-sm space-y-3">
+          <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+            <span class="font-serif font-bold text-blue-900 flex items-center space-x-1.5">
+              <span>🎯 UPSC Standard Solution & Elimination Logic</span>
+            </span>
+            <span id="solutionResultTag" class="text-xs px-2 py-0.5 rounded font-mono font-bold"></span>
+          </div>
+
+          <div id="solutionBody" class="text-slate-800 space-y-2 leading-relaxed">
+            <!-- Dynamic Detailed Solution -->
+          </div>
+
+          <div class="pt-2 border-t border-slate-200 flex flex-wrap items-center justify-between text-xs text-slate-500">
+            <div><strong class="text-slate-700">Source:</strong> <span id="sourceRefText">Standard NCERT / Indian Polity</span></div>
+            <div id="eliminationTipText" class="text-blue-700 font-mono text-[11px] font-semibold"></div>
+          </div>
+        </div>
+
+        <!-- Bottom Navigation & Action Bar -->
+        <div class="pt-6 border-t border-slate-200 flex items-center justify-between gap-3">
+          <button id="prevBtn" onclick="navigateQuestion(-1)" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-semibold rounded-lg border border-slate-300 transition">
+            &larr; Previous
+          </button>
+
+          <div class="flex items-center space-x-2">
+            <button id="showSolBtn" onclick="revealExplanation()" class="px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 text-xs font-semibold rounded-lg transition">
+              💡 Show Solution
+            </button>
+            <button id="clearBtn" onclick="clearCurrentAnswer()" class="px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-medium rounded-lg border border-slate-200 transition">
+              Clear Choice
+            </button>
+          </div>
+
+          <button id="nextBtn" onclick="navigateQuestion(1)" class="px-5 py-2 bg-blue-900 hover:bg-blue-800 text-white text-xs sm:text-sm font-bold rounded-lg shadow-sm transition">
+            Next &rarr;
+          </button>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- Right Column: Interactive UPSC OMR Sheet & Question Palette (5 or 4 cols) -->
+    <aside class="lg:col-span-5 xl:col-span-4 flex flex-col space-y-4">
+      
+      <!-- Performance Preview & Live Scorecard Strip -->
+      <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+        <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+          <h3 class="font-serif text-xs font-bold text-blue-950 uppercase tracking-wider">Candidate Scorecard</h3>
+          <span id="currentScorePreview" class="font-mono text-xs font-bold text-blue-700">Net: +0.00</span>
+        </div>
+
+        <div class="grid grid-cols-4 gap-2 text-center text-xs font-mono">
+          <div class="bg-slate-50 p-2 rounded-lg border border-slate-200">
+            <div id="statAttempted" class="font-bold text-emerald-700 text-sm sm:text-base">0</div>
+            <div class="text-[10px] text-slate-500 uppercase mt-0.5">Filled</div>
+          </div>
+          <div class="bg-slate-50 p-2 rounded-lg border border-slate-200">
+            <div id="statLeft" class="font-bold text-slate-500 text-sm sm:text-base">10</div>
+            <div class="text-[10px] text-slate-500 uppercase mt-0.5">Blank</div>
+          </div>
+          <div class="bg-slate-50 p-2 rounded-lg border border-slate-200">
+            <div id="statReview" class="font-bold text-purple-700 text-sm sm:text-base">0</div>
+            <div class="text-[10px] text-slate-500 uppercase mt-0.5">Review</div>
+          </div>
+          <div class="bg-slate-50 p-2 rounded-lg border border-slate-200">
+            <div id="statAccuracy" class="font-bold text-blue-700 text-sm sm:text-base">0%</div>
+            <div class="text-[10px] text-slate-500 uppercase mt-0.5">Accuracy</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- UPSC Interactive OMR Sheet Component -->
+      <div id="omrSectionCard" class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex-1 flex flex-col">
+        <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-200">
+          <div class="flex items-center space-x-1.5">
+            <span class="w-3 h-3 rounded-full bg-blue-900 inline-block"></span>
+            <h4 class="font-serif text-xs font-bold text-blue-950 uppercase tracking-wider">UPSC OMR Sheet</h4>
+          </div>
+          <span class="text-[10px] text-slate-400 font-mono">Roll No: 2026-UPSC</span>
+        </div>
+
+        <!-- Scrollable OMR Sheet Grid -->
+        <div class="custom-scroll max-h-72 lg:max-h-[380px] overflow-y-auto pr-1">
+          <div id="omrRowsContainer" class="space-y-2">
+            <!-- Dynamic OMR rows injected here -->
+          </div>
+        </div>
+
+        <!-- OMR Legend -->
+        <div class="mt-3 pt-3 border-t border-slate-200 grid grid-cols-2 gap-1.5 text-[10px] text-slate-500 font-mono">
+          <div class="flex items-center space-x-1.5">
+            <span class="w-3 h-3 rounded-full bg-blue-900"></span>
+            <span>Darkened Bubble</span>
+          </div>
+          <div class="flex items-center space-x-1.5">
+            <span class="w-3 h-3 rounded-full border border-slate-400 bg-white"></span>
+            <span>Unmarked</span>
+          </div>
+          <div class="flex items-center space-x-1.5">
+            <span class="w-3 h-3 rounded-full bg-green-600"></span>
+            <span>Correct (Post-Exam)</span>
+          </div>
+          <div class="flex items-center space-x-1.5">
+            <span class="w-3 h-3 rounded-full bg-red-600"></span>
+            <span>Incorrect (Post-Exam)</span>
+          </div>
+        </div>
+
+        <!-- Final Test Submission Button -->
+        <div class="mt-4 pt-3 border-t border-slate-200">
+          <button onclick="submitFullMockExam()" class="w-full py-2.5 bg-blue-900 hover:bg-blue-800 text-white font-bold text-xs uppercase tracking-wider rounded-lg shadow transition">
+            🏁 Submit Mock & Generate UPSC Scorecard
+          </button>
+        </div>
+      </div>
+
+    </aside>
+
+  </main>
+
+  <!-- Modal: Gemini API Key & Model Configuration -->
+  <div id="settingsModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <h3 class="font-serif font-bold text-blue-950 text-base">Configuration & Gemini API Key</h3>
+        <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-600 text-lg font-mono">&times;</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block text-slate-700 font-semibold mb-1">Google Gemini API Key (Zero Cost - BYOK)</label>
+          <input type="password" id="geminiApiKeyInput" placeholder="AIzaSy..." class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 font-mono text-slate-900 focus:ring-2 focus:ring-blue-600 focus:outline-none">
+          <p class="text-[11px] text-slate-500 mt-1">
+            🔒 Stored strictly in your browser's local storage. Never shared or sent to any third-party server.
+          </p>
+        </div>
+
+        <div>
+          <label class="block text-slate-700 font-semibold mb-1">Target Exam Paper</label>
+          <select id="paperModeSelect" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 font-medium">
+            <option value="GS1">General Studies Paper 1 (+2.00 / -0.66 marks)</option>
+            <option value="CSAT">CSAT Paper 2 (+2.50 / -0.83 marks, 33% qualifying)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-slate-700 font-semibold mb-1">Evaluation & Feedback Mode</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button id="modePracticeBtn" onclick="selectStudyMode('PRACTICE')" class="p-2 rounded-lg border text-left bg-blue-50 border-blue-600 text-blue-900 font-bold">
+              Bit-by-Bit Mode
+              <span class="block text-[10px] font-normal text-slate-500 mt-0.5">Instant feedback after each bubble</span>
+            </button>
+            <button id="modeExamBtn" onclick="selectStudyMode('EXAM')" class="p-2 rounded-lg border text-left bg-slate-50 border-slate-300 text-slate-700">
+              UPSC Timed Mock
+              <span class="block text-[10px] font-normal text-slate-500 mt-0.5">Solutions locked until submit</span>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-700 font-semibold mb-1">Timer Countdown</label>
+          <select id="timerPresetSelect" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 font-medium">
+            <option value="120">120 Minutes (Full Standard Paper)</option>
+            <option value="60">60 Minutes</option>
+            <option value="30">30 Minutes (Mini Mock)</option>
+            <option value="OFF">Untimed (Practice Mode)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="pt-2 flex justify-end space-x-2 border-t border-slate-100">
+        <button onclick="closeSettingsModal()" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold hover:bg-slate-200">
+          Cancel
+        </button>
+        <button onclick="saveSettings()" class="px-5 py-2 bg-blue-900 text-white rounded-lg text-xs font-bold hover:bg-blue-800">
+          Save Settings
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: AI Question Generator Modal -->
+  <div id="aiGenModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <div class="flex items-center space-x-2">
+          <span class="text-lg">✨</span>
+          <h3 class="font-serif font-bold text-blue-950 text-base">Gemini UPSC MCQ Generator</h3>
+        </div>
+        <button onclick="closeAiGeneratorModal()" class="text-slate-400 hover:text-slate-600 text-lg font-mono">&times;</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block text-slate-700 font-semibold mb-1">Topic / Micro-Theme</label>
+          <input type="text" id="aiTopicInput" placeholder="e.g. Fundamental Rights, Western Ghats Ecology, Balance of Payments, Syllogisms" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-slate-900 focus:ring-2 focus:ring-blue-600 focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-700 font-semibold mb-1">Paper Type</label>
+            <select id="aiPaperType" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 font-medium">
+              <option value="GS1">GS-1 (Polity/History/Geo/Econ)</option>
+              <option value="CSAT">CSAT (Reading Comp / Quant)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-slate-700 font-semibold mb-1">Number of MCQs</label>
+            <select id="aiQuestionCount" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 font-medium">
+              <option value="5">5 High-Yield Questions</option>
+              <option value="10" selected>10 Questions</option>
+              <option value="15">15 Questions</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-700 font-semibold mb-1">UPSC Question Format</label>
+          <select id="aiQuestionStyle" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 font-medium">
+            <option value="STATEMENT">Statement Based (1 and 2, 'How many of above are correct?')</option>
+            <option value="ASSERTION">Assertion & Reason</option>
+            <option value="MATCH">Pair Matching (Historical sites, Rivers, Treaties)</option>
+            <option value="STANDARD">Standard Mixed Format</option>
+          </select>
+        </div>
+
+        <div id="aiGenStatus" class="hidden p-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-900 flex items-center space-x-2">
+          <div class="w-4 h-4 border-2 border-blue-900 border-t-transparent rounded-full animate-spin"></div>
+          <span id="aiGenStatusText" class="font-medium text-xs">Connecting to Gemini API & synthesizing questions...</span>
+        </div>
+      </div>
+
+      <div class="pt-2 flex justify-end space-x-2 border-t border-slate-100">
+        <button onclick="closeAiGeneratorModal()" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold hover:bg-slate-200">
+          Cancel
+        </button>
+        <button id="generateBtn" onclick="triggerGeminiGeneration()" class="px-5 py-2 bg-blue-900 text-white rounded-lg text-xs font-bold hover:bg-blue-800 shadow">
+          🚀 Generate Now
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Detailed UPSC Prelims Scorecard & Diagnostic -->
+  <div id="scorecardModal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-200 rounded-2xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto custom-scroll">
+      
+      <div class="text-center space-y-1 border-b border-slate-200 pb-4">
+        <span class="text-xs uppercase font-mono tracking-widest text-blue-700 font-bold">Civil Services Examination • Mock Evaluation</span>
+        <h2 class="font-serif text-2xl font-black text-blue-950">Official Prelims Scorecard</h2>
+        <p id="scorecardSubtitle" class="text-xs text-slate-500">General Studies Paper - I Mock Evaluation</p>
+      </div>
+
+      <!-- Scorecard Numbers Grid -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+          <div class="text-xs text-slate-500">Net Score</div>
+          <div id="modalNetScore" class="text-2xl font-black font-mono text-blue-900 mt-1">+0.00</div>
+          <div id="modalMaxMarks" class="text-[10px] text-slate-400">out of 200.0</div>
+        </div>
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+          <div class="text-xs text-slate-500">Accuracy</div>
+          <div id="modalAccuracy" class="text-2xl font-black font-mono text-emerald-700 mt-1">0%</div>
+          <div class="text-[10px] text-slate-400">correct / attempted</div>
+        </div>
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+          <div class="text-xs text-slate-500">Correct</div>
+          <div id="modalCorrect" class="text-2xl font-black font-mono text-green-700 mt-1">0</div>
+          <div id="modalPositiveFactor" class="text-[10px] text-slate-400">+2.00 per right</div>
+        </div>
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+          <div class="text-xs text-slate-500">Incorrect</div>
+          <div id="modalWrong" class="text-2xl font-black font-mono text-red-700 mt-1">0</div>
+          <div id="modalNegativeFactor" class="text-[10px] text-slate-400">-0.66 penalty</div>
+        </div>
+      </div>
+
+      <!-- Cutoff / Qualification Alert -->
+      <div id="cutoffNoticeCard" class="p-4 rounded-xl border text-xs leading-relaxed">
+        <!-- Injected status message -->
+      </div>
+
+      <!-- Subject Performance Breakdown -->
+      <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3 text-xs">
+        <h4 class="font-serif font-bold text-blue-950 uppercase tracking-wider">Subject-Wise Performance</h4>
+        <div id="subjectBreakdownContainer" class="space-y-2">
+          <!-- Dynamic subject performance bars -->
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+        <button onclick="enterSolutionReviewMode()" class="px-4 py-2.5 bg-blue-50 text-blue-900 border border-blue-200 rounded-lg text-xs font-bold hover:bg-blue-100">
+          📖 Review Detailed Solutions on OMR
+        </button>
+        <button onclick="restartTest()" class="px-5 py-2.5 bg-blue-900 text-white rounded-lg text-xs font-bold hover:bg-blue-800 shadow">
+          🔄 Retake Test
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="toastNotification" class="hidden fixed bottom-5 right-5 z-50 bg-blue-950 text-white px-4 py-2.5 rounded-xl shadow-lg text-xs flex items-center space-x-2 transition-all duration-300">
+    <span id="toastIcon">ℹ️</span>
+    <span id="toastMessage">Action completed</span>
+  </div>
+
+  <!-- Application Logic & Starter Question Bank -->
+  <script>
+    /* =========================================================================
+       DEFAULT HIGH-YIELD UPSC PRELIMS STARTER QUESTION BANK
+       (Works 100% offline without needing API key on initial load)
+       ========================================================================= */
+    const STARTER_QUESTIONS = [
+      {
+        id: 1,
+        paper: "GS1",
+        subject: "Polity",
+        question: "With reference to the Constitution of India, consider the following statements:<br>1. The President of India cannot summon the Parliament without the recommendation of the Prime Minister and the Council of Ministers.<br>2. The Constitution does not provide for a minimum number of days that the Parliament is required to meet in a year.<br>Which of the statements given above is/are correct?",
+        options: [
+          "1 only",
+          "2 only",
+          "Both 1 and 2",
+          "Neither 1 nor 2"
+        ],
+        correct: 1,
+        explanation: "Statement 1 is incorrect: Under Article 85, the President summons each House of Parliament from time to time. While the President acts on aid and advice of CoM, constitutional convention dictates parliament must meet. Statement 2 is correct: The Constitution does not prescribe a minimum number of days or sessions per year, only that six months shall not intervene between two sessions.",
+        source: "Indian Polity (Laxmikanth) / Article 85",
+        elimination: "UPSC Trap: Look out for words like 'minimum number of days'—no such limit is written in the Constitution."
+      },
+      {
+        id: 2,
+        paper: "GS1",
+        subject: "History",
+        question: "Consider the following statements regarding the famous Harappan site of Dholavira:<br>1. Unlike most other Harappan cities which were divided into two parts, Dholavira was divided into three principal parts.<br>2. A large open area named 'stadium' or ceremonial ground was discovered here.<br>3. It features one of the world's earliest known rainwater harvesting systems consisting of giant rock-cut reservoirs.<br>How many of the above statements are correct?",
+        options: [
+          "Only one",
+          "Only two",
+          "All three",
+          "None"
+        ],
+        correct: 2,
+        explanation: "All three statements are correct: Dholavira in Kutch, Gujarat was partitioned into Citadel, Middle Town, and Lower Town (3 parts). Excavations by R.S. Bisht revealed an enormous ceremonial ground (stadium) and a sophisticated network of 16 rock-cut water reservoirs.",
+        source: "NCERT Class 12 Themes in Indian History Part-I",
+        elimination: "Standard UPSC pattern: 'How many of the above are correct?' All 3 are classic hallmarks of Dholavira."
+      },
+      {
+        id: 3,
+        paper: "GS1",
+        subject: "Economy",
+        question: "Which of the following activities can lead to a decrease in the money supply in the Indian economy?<br>1. An increase in the Cash Reserve Ratio (CRR) by the RBI.<br>2. Sale of government securities in the open market by the RBI.<br>3. An increase in the Repo Rate.<br>Select the correct answer using the code given below:",
+        options: [
+          "1 and 2 only",
+          "2 and 3 only",
+          "1 and 3 only",
+          "1, 2 and 3"
+        ],
+        correct: 3,
+        explanation: "All three actions are contractionary monetary policy measures: Increasing CRR locks up more bank funds; Open Market Sale of G-Secs absorbs liquidity from banks; Hikes in Repo rate increase the borrowing cost, decreasing credit expansion and reducing money supply.",
+        source: "Macroeconomics NCERT Class 12 / Ramesh Singh",
+        elimination: "All three are classic RBI monetary tightening tools that reduce liquidity in the banking system."
+      },
+      {
+        id: 4,
+        paper: "GS1",
+        subject: "Geography",
+        question: "With reference to the Western Ghats of India, consider the following statements:<br>1. They are UNESCO World Heritage Sites and are older than the Himalaya mountains.<br>2. The highest peak of the Western Ghats is Anamudi, located in Kerala.<br>3. They form an unbroken continuous wall without any geographical passes or gaps.<br>Which of the statements given above is/are correct?",
+        options: [
+          "1 and 2 only",
+          "2 and 3 only",
+          "1 and 3 only",
+          "1, 2 and 3"
+        ],
+        correct: 0,
+        explanation: "Statements 1 and 2 are correct: Western Ghats are geologically older than the young fold Himalayas; Anamudi (2,695m) in Anaimalai hills is the highest peak. Statement 3 is incorrect: The Western Ghats are not completely unbroken; they have prominent passes such as Thal Ghat, Bhor Ghat, and the Palghat Gap.",
+        source: "NCERT Class 11 India: Physical Environment",
+        elimination: "Extreme word trap: 'unbroken continuous wall without any passes' is false due to the famous Palghat and Bhor ghats."
+      },
+      {
+        id: 5,
+        paper: "GS1",
+        subject: "Polity",
+        question: "In the context of the Indian Judiciary, what does the term 'Curative Petition' mean?",
+        options: [
+          "A petition filed by medical practitioners challenging public health laws.",
+          "The last constitutional resort available to a litigant after a review petition has been dismissed by the Supreme Court.",
+          "A writ issued by High Courts under Article 226 to cure procedural administrative errors.",
+          "A legislative bill passed by Parliament to nullify a judicial precedent."
+        ],
+        correct: 1,
+        explanation: "A Curative Petition was established by the Supreme Court of India in the landmark case of Rupa Ashok Hurra vs. Ashok Hurra (2002). It is the final constitutional judicial remedy to prevent abuse of its process and cure gross miscarriage of justice after a review petition has already been dismissed.",
+        source: "Supreme Court Landmark Rulings & Indian Polity",
+        elimination: "Curative petition is born out of judicial interpretation (Rupa Hurra 2002), not legislative statutory enactment."
+      },
+      {
+        id: 6,
+        paper: "CSAT",
+        subject: "CSAT-RC",
+        passage: "Technological disruptions often create asymmetrical benefits in labor markets. While routine, manual tasks are rapidly automated, complex cognitive and creative tasks demand human agency. If education systems fail to pivot from rote conditioning to foundational critical thinking and adaptability, economic inequality will not only persist but widen exponentially.",
+        question: "Which of the following statements best reflects the most logical and critical inference that can be drawn from the passage?",
+        options: [
+          "Automation must be outlawed by governments to protect routine manual workers.",
+          "Educational reform focused on higher-order cognitive agility is vital to counteract technology-induced inequality.",
+          "Developing nations should focus entirely on humanities rather than artificial intelligence.",
+          "Cognitive tasks will soon be completely eliminated by emerging robotic systems."
+        ],
+        correct: 1,
+        explanation: "Option B directly captures the causal link drawn by the author: if education does not pivot from rote conditioning to critical thinking, inequality will widen as technology automates routine jobs.",
+        source: "CSAT Paper-2 Reading Comprehension Standard",
+        elimination: "Option A and D are extreme unwarranted extrapolations; Option C contradicts the passage's balance."
+      },
+      {
+        id: 7,
+        paper: "CSAT",
+        subject: "CSAT-Quant",
+        question: "A candidate needs to score 33% marks in an examination to qualify. If a candidate secures 125 marks and fails by 40 marks, what are the maximum total marks of the examination?",
+        options: [
+          "400",
+          "500",
+          "600",
+          "450"
+        ],
+        correct: 1,
+        explanation: "Passing marks = 125 + 40 = 165 marks. As 165 represents 33% of the maximum marks (M): 0.33 * M = 165 => M = 165 / 0.33 = 500 marks.",
+        source: "Basic Numeracy / CSAT Arithmetic",
+        elimination: "Check: 33% of 500 = 165. 165 - 40 = 125."
+      },
+      {
+        id: 8,
+        paper: "GS1",
+        subject: "Economy",
+        question: "Consider the following statements regarding the 'Headline Inflation' versus 'Core Inflation' in India:<br>1. Headline inflation measures inflation based on the Consumer Price Index (Combined) covering all goods and services.<br>2. Core inflation excludes volatile components such as food and fuel from headline inflation.<br>Which of the statements given above is/are correct?",
+        options: [
+          "1 only",
+          "2 only",
+          "Both 1 and 2",
+          "Neither 1 nor 2"
+        ],
+        correct: 2,
+        explanation: "Both statements are correct: Headline inflation is the comprehensive measure based on CPI-C (2012 base year). Core inflation strips out volatile food and fuel prices to determine the underlying long-term price trend.",
+        source: "RBI Bulletins & Economic Survey",
+        elimination: "Both definitions are standard economic terminology frequently tested by UPSC."
+      },
+      {
+        id: 9,
+        paper: "CSAT",
+        subject: "CSAT-Quant",
+        question: "In a code language, if 'PAPER' is written as 'QBQFS', how will 'CIVIL' be written in the same code?",
+        options: [
+          "DJWJM",
+          "DIWJM",
+          "EKXKN",
+          "DKWJN"
+        ],
+        correct: 0,
+        explanation: "Each letter is shifted forward by +1 position in the English alphabet: C(+1)=D, I(+1)=J, V(+1)=W, I(+1)=J, L(+1)=M. Thus 'DJWJM'.",
+        source: "Analytical Reasoning / CSAT Coding-Decoding",
+        elimination: "Direct +1 letter increment pattern."
+      },
+      {
+        id: 10,
+        paper: "GS1",
+        subject: "History",
+        question: "Who among the following founded the 'Young Bengal Movement' in Calcutta in the late 1820s?",
+        options: [
+          "Raja Ram Mohan Roy",
+          "Henry Louis Vivian Derozio",
+          "Ishwar Chandra Vidyasagar",
+          "Debendranath Tagore"
+        ],
+        correct: 1,
+        explanation: "Henry Louis Vivian Derozio (1809–1831), a teacher at Hindu College Calcutta, inspired his students to think freely, question authority, and advocate women's rights, initiating the radical Young Bengal Movement.",
+        source: "Spectrum's Modern India / Bipan Chandra",
+        elimination: "Derozio is universally recognized as the pioneer of the Young Bengal free-thinking radical group."
+      }
+    ];
+
+    /* =========================================================================
+       GLOBAL APP STATE
+       ========================================================================= */
+    let currentQuestions = [...STARTER_QUESTIONS];
+    let activeQuestionIndex = 0;
+    let userAnswers = {};      // { questionId: selectedOptionIndex (0-3) }
+    let markedForReview = new Set();
+    let isExamSubmitted = false;
+    let currentStudyMode = 'PRACTICE'; // 'PRACTICE' or 'EXAM'
+    let currentPaper = 'GS1';          // 'GS1' or 'CSAT'
+    let activeSubjectFilter = 'ALL';
+
+    // Timer variables
+    let timerTotalSeconds = 120 * 60;
+    let timerRemainingSeconds = 120 * 60;
+    let timerInterval = null;
+    let isTimerRunning = false;
+
+    // Initialization on Page Load
+    window.addEventListener('DOMContentLoaded', () => {
+      loadStoredApiKey();
+      initTimer(120);
+      renderOMRGrid();
+      displayQuestion(0);
+      updateScorePreview();
+    });
+
+    /* =========================================================================
+       TIMER & TIMEKEEPING
+       ========================================================================= */
+    function initTimer(minutes) {
+      if (timerInterval) clearInterval(timerInterval);
+      if (minutes === 'OFF') {
+        document.getElementById('timerText').innerText = 'UNTIMED';
+        isTimerRunning = false;
+        return;
+      }
+
+      timerTotalSeconds = parseInt(minutes, 10) * 60;
+      timerRemainingSeconds = timerTotalSeconds;
+      isTimerRunning = true;
+
+      timerInterval = setInterval(() => {
+        if (!isTimerRunning) return;
+        if (timerRemainingSeconds > 0) {
+          timerRemainingSeconds--;
+          renderTimerDisplay();
+
+          // Warnings
+          if (timerRemainingSeconds === 30 * 60) {
+            showToast("⚠️ 30 Minutes Remaining in UPSC Mock!", "warning");
+          } else if (timerRemainingSeconds === 5 * 60) {
+            showToast("🚨 Final 5 Minutes! Start reviewing OMR bubbles.", "alert");
+          }
+        } else {
+          clearInterval(timerInterval);
+          showToast("⏰ Time is up! Submitting Mock Exam.", "info");
+          submitFullMockExam();
+        }
+      }, 1000);
+
+      renderTimerDisplay();
+    }
+
+    function renderTimerDisplay() {
+      const hrs = Math.floor(timerRemainingSeconds / 3600);
+      const mins = Math.floor((timerRemainingSeconds % 3600) / 60);
+      const secs = timerRemainingSeconds % 60;
+      document.getElementById('timerText').innerText = 
+        `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    /* =========================================================================
+       QUESTION NAVIGATION & RENDERING
+       ========================================================================= */
+    function getFilteredQuestions() {
+      if (activeSubjectFilter === 'ALL') return currentQuestions;
+      return currentQuestions.filter(q => q.subject === activeSubjectFilter);
+    }
+
+    function displayQuestion(index) {
+      const filtered = getFilteredQuestions();
+      if (!filtered.length) {
+        document.getElementById('questionStem').innerHTML = "No questions found for this subject filter.";
+        document.getElementById('optionsContainer').innerHTML = "";
+        return;
+      }
+
+      if (index < 0) index = 0;
+      if (index >= filtered.length) index = filtered.length - 1;
+      activeQuestionIndex = index;
+
+      const q = filtered[activeQuestionIndex];
+
+      // Badges
+      document.getElementById('currentQNumTag').innerText = `Q.${activeQuestionIndex + 1} / ${filtered.length}`;
+      document.getElementById('questionSubjectTag').innerText = q.subject;
+      
+      const posMarks = q.paper === 'CSAT' ? '+2.50' : '+2.00';
+      const negMarks = q.paper === 'CSAT' ? '-0.83' : '-0.66';
+      document.getElementById('questionMarksTag').innerText = `${posMarks} / ${negMarks}`;
+
+      // Passage (for CSAT)
+      const passageBox = document.getElementById('passageContainer');
+      if (q.passage) {
+        passageBox.innerHTML = `<strong>Passage:</strong><br>${q.passage}`;
+        passageBox.classList.remove('hidden');
+      } else {
+        passageBox.classList.add('hidden');
+      }
+
+      // Stem
+      document.getElementById('questionStem').innerHTML = `
+        <span class="font-bold text-blue-900 font-mono mr-2">Q${q.id}.</span>
+        ${q.question}
+      `;
+
+      // Options
+      const optionsBox = document.getElementById('optionsContainer');
+      optionsBox.innerHTML = '';
+      const letters = ['A', 'B', 'C', 'D'];
+
+      q.options.forEach((optText, oIdx) => {
+        const optRow = document.createElement('div');
+        optRow.className = getOptionStylingClass(q.id, oIdx);
+        optRow.onclick = () => selectBubbleAnswer(q.id, oIdx);
+
+        optRow.innerHTML = `
+          <div class="flex items-start space-x-3 w-full">
+            <span class="w-6 h-6 rounded-full border border-slate-300 flex items-center justify-center font-mono font-bold text-xs shrink-0 mt-0.5 ${userAnswers[q.id] === oIdx ? 'bg-blue-900 text-white border-blue-900' : 'bg-slate-100 text-slate-700'}">
+              ${letters[oIdx]}
+            </span>
+            <div class="text-sm leading-relaxed">${optText}</div>
+          </div>
+        `;
+        optionsBox.appendChild(optRow);
+      });
+
+      // Review Status Visual
+      const isMarked = markedForReview.has(q.id);
+      document.getElementById('reviewBtnText').innerText = isMarked ? 'Bookmarked for Review' : 'Mark for Review';
+      document.getElementById('markReviewBtn').classList.toggle('bg-purple-100', isMarked);
+
+      // Handle Solutions
+      const solBox = document.getElementById('solutionBox');
+      const shouldShowSol = (currentStudyMode === 'PRACTICE' && userAnswers[q.id] !== undefined) || isExamSubmitted;
+
+      if (shouldShowSol) {
+        renderSolutionBox(q);
+        solBox.classList.remove('hidden');
+      } else {
+        solBox.classList.add('hidden');
+      }
+
+      // Buttons
+      document.getElementById('prevBtn').disabled = activeQuestionIndex === 0;
+      document.getElementById('prevBtn').classList.toggle('opacity-50', activeQuestionIndex === 0);
+      document.getElementById('nextBtn').innerText = (activeQuestionIndex === filtered.length - 1) ? 'Finish & Review' : 'Next →';
+
+      // Highlight corresponding OMR row
+      highlightOMRRow(q.id);
+    }
+
+    function getOptionStylingClass(qId, oIdx) {
+      const base = "p-3.5 rounded-xl border transition cursor-pointer flex items-center text-slate-800 ";
+      const selected = userAnswers[qId];
+
+      if (currentStudyMode === 'PRACTICE' && selected !== undefined) {
+        const correct = findQuestionById(qId).correct;
+        if (oIdx === correct) {
+          return base + "bg-emerald-50 border-emerald-500 text-emerald-900 ring-1 ring-emerald-500 font-medium";
+        } else if (oIdx === selected) {
+          return base + "bg-rose-50 border-rose-500 text-rose-900 ring-1 ring-rose-500 font-medium";
+        } else {
+          return base + "bg-white border-slate-200 text-slate-400 opacity-60";
+        }
+      }
+
+      if (isExamSubmitted) {
+        const correct = findQuestionById(qId).correct;
+        if (oIdx === correct) {
+          return base + "bg-emerald-50 border-emerald-500 text-emerald-900 ring-1 ring-emerald-500 font-medium";
+        } else if (oIdx === selected) {
+          return base + "bg-rose-50 border-rose-500 text-rose-900";
+        } else {
+          return base + "bg-white border-slate-200 text-slate-400 opacity-60";
+        }
+      }
+
+      // Unanswered or Exam mode
+      if (selected === oIdx) {
+        return base + "bg-blue-50 border-blue-600 text-blue-950 ring-1 ring-blue-600 font-semibold";
+      }
+      return base + "bg-white hover:bg-slate-50 border-slate-200 hover:border-slate-300";
+    }
+
+    function selectBubbleAnswer(qId, oIdx) {
+      if (isExamSubmitted) return;
+      userAnswers[qId] = oIdx;
+
+      // Update OMR Visual
+      updateSingleOMRRow(qId);
+      displayQuestion(activeQuestionIndex);
+      updateScorePreview();
+    }
+
+    function clearCurrentAnswer() {
+      const filtered = getFilteredQuestions();
+      const q = filtered[activeQuestionIndex];
+      delete userAnswers[q.id];
+      updateSingleOMRRow(q.id);
+      displayQuestion(activeQuestionIndex);
+      updateScorePreview();
+    }
+
+    function toggleReviewCurrent() {
+      const filtered = getFilteredQuestions();
+      const q = filtered[activeQuestionIndex];
+      if (markedForReview.has(q.id)) {
+        markedForReview.delete(q.id);
+      } else {
+        markedForReview.add(q.id);
+      }
+      updateSingleOMRRow(q.id);
+      displayQuestion(activeQuestionIndex);
+      updateScorePreview();
+    }
+
+    function revealExplanation() {
+      const filtered = getFilteredQuestions();
+      const q = filtered[activeQuestionIndex];
+      renderSolutionBox(q);
+      document.getElementById('solutionBox').classList.remove('hidden');
+    }
+
+    function renderSolutionBox(q) {
+      const choice = userAnswers[q.id];
+      const isRight = choice === q.correct;
+      const tag = document.getElementById('solutionResultTag');
+
+      if (choice === undefined) {
+        tag.innerText = "UNANSWERED";
+        tag.className = "text-xs px-2 py-0.5 rounded font-mono font-bold bg-slate-100 text-slate-600";
+      } else if (isRight) {
+        const pts = q.paper === 'CSAT' ? '+2.50' : '+2.00';
+        tag.innerText = `CORRECT (${pts})`;
+        tag.className = "text-xs px-2 py-0.5 rounded font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-300";
+      } else {
+        const pen = q.paper === 'CSAT' ? '-0.83' : '-0.66';
+        tag.innerText = `INCORRECT (${pen})`;
+        tag.className = "text-xs px-2 py-0.5 rounded font-mono font-bold bg-rose-100 text-rose-800 border border-rose-300";
+      }
+
+      document.getElementById('solutionBody').innerHTML = `
+        <div class="text-sm font-semibold text-emerald-700 mb-1">
+          Correct Option: <span class="font-mono font-black text-blue-900">(${['A','B','C','D'][q.correct]}) ${q.options[q.correct]}</span>
+        </div>
+        <div class="text-xs sm:text-sm text-slate-700">${q.explanation}</div>
+      `;
+
+      document.getElementById('sourceRefText').innerText = q.source || "UPSC Standard Reference";
+      document.getElementById('eliminationTipText').innerText = q.elimination ? `💡 ${q.elimination}` : '';
+    }
+
+    function navigateQuestion(step) {
+      const filtered = getFilteredQuestions();
+      const newPos = activeQuestionIndex + step;
+      if (newPos >= 0 && newPos < filtered.length) {
+        displayQuestion(newPos);
+      } else if (newPos >= filtered.length) {
+        if (confirm("You have reached the end of this set. Proceed to finalize & evaluate your score?")) {
+          submitFullMockExam();
+        }
+      }
+    }
+
+    /* =========================================================================
+       UPSC OMR SHEET CONTROLLER
+       ========================================================================= */
+    function renderOMRGrid() {
+      const container = document.getElementById('omrRowsContainer');
+      container.innerHTML = '';
+
+      currentQuestions.forEach((q, idx) => {
+        const row = document.createElement('div');
+        row.id = `omr-row-${q.id}`;
+        row.className = "flex items-center justify-between p-1.5 rounded-lg border border-slate-100 hover:bg-slate-50 transition";
+        
+        row.innerHTML = `
+          <div class="flex items-center space-x-2">
+            <span class="w-6 text-[11px] font-mono font-bold text-slate-500 cursor-pointer hover:text-blue-900" onclick="jumpToQuestionId(${q.id})">
+              ${q.id < 10 ? '0' + q.id : q.id}.
+            </span>
+            <span id="omr-status-${q.id}" class="w-2 h-2 rounded-full ${markedForReview.has(q.id) ? 'bg-purple-600' : 'bg-transparent'}"></span>
+          </div>
+
+          <div class="flex items-center space-x-2 sm:space-x-3">
+            ${['A','B','C','D'].map((letter, optIndex) => `
+              <div class="omr-bubble ${getBubbleClass(q.id, optIndex)}" 
+                   onclick="selectBubbleAnswer(${q.id}, ${optIndex})"
+                   title="Select (${letter}) for Q.${q.id}">
+                ${letter}
+              </div>
+            `).join('')}
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function getBubbleClass(qId, optIndex) {
+      const chosen = userAnswers[qId];
+      if (isExamSubmitted) {
+        const correct = findQuestionById(qId).correct;
+        if (optIndex === correct) return 'correct-bubble';
+        if (chosen === optIndex && chosen !== correct) return 'wrong-bubble';
+      }
+      return chosen === optIndex ? 'filled' : '';
+    }
+
+    function updateSingleOMRRow(qId) {
+      const row = document.getElementById(`omr-row-${qId}`);
+      if (!row) return;
+
+      const bubbles = row.querySelectorAll('.omr-bubble');
+      bubbles.forEach((b, optIndex) => {
+        b.className = `omr-bubble ${getBubbleClass(qId, optIndex)}`;
+      });
+
+      const statusDot = document.getElementById(`omr-status-${qId}`);
+      if (statusDot) {
+        statusDot.className = `w-2 h-2 rounded-full ${markedForReview.has(qId) ? 'bg-purple-600' : 'bg-transparent'}`;
+      }
+    }
+
+    function highlightOMRRow(qId) {
+      currentQuestions.forEach(q => {
+        const r = document.getElementById(`omr-row-${q.id}`);
+        if (r) r.classList.remove('bg-blue-50', 'border-blue-300');
+      });
+      const targetRow = document.getElementById(`omr-row-${qId}`);
+      if (targetRow) {
+        targetRow.classList.add('bg-blue-50', 'border-blue-300');
+        targetRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+
+    function jumpToQuestionId(qId) {
+      const filtered = getFilteredQuestions();
+      const pos = filtered.findIndex(q => q.id === qId);
+      if (pos !== -1) {
+        displayQuestion(pos);
+      } else {
+        activeSubjectFilter = 'ALL';
+        updateFilterButtonStyles('ALL');
+        displayQuestion(currentQuestions.findIndex(q => q.id === qId));
+      }
+    }
+
+    function toggleOMRView() {
+      const omrCard = document.getElementById('omrSectionCard');
+      omrCard.classList.toggle('hidden');
+    }
+
+    /* =========================================================================
+       SUBJECT FILTERING
+       ========================================================================= */
+    function filterBySubject(subj) {
+      activeSubjectFilter = subj;
+      updateFilterButtonStyles(subj);
+      displayQuestion(0);
+    }
+
+    function updateFilterButtonStyles(activeSubj) {
+      const buttons = document.querySelectorAll('.sub-filter-btn');
+      buttons.forEach(btn => {
+        if (btn.getAttribute('data-filter') === activeSubj) {
+          btn.className = "sub-filter-btn px-2.5 py-1 rounded-md font-semibold bg-blue-900 text-white";
+        } else {
+          btn.className = "sub-filter-btn px-2.5 py-1 rounded-md font-medium text-slate-700 bg-slate-100 hover:bg-slate-200";
+        }
+      });
+    }
+
+    /* =========================================================================
+       SCORING, EVALUATION & UPSC STATS
+       ========================================================================= */
+    function findQuestionById(id) {
+      return currentQuestions.find(q => q.id === id);
+    }
+
+    function calculateScores() {
+      let correct = 0;
+      let wrong = 0;
+      let attempted = 0;
+
+      const posFactor = currentPaper === 'CSAT' ? 2.50 : 2.00;
+      const negFactor = currentPaper === 'CSAT' ? 0.83 : 0.66;
+
+      currentQuestions.forEach(q => {
+        const userChoice = userAnswers[q.id];
+        if (userChoice !== undefined) {
+          attempted++;
+          if (userChoice === q.correct) correct++;
+          else wrong++;
+        }
+      });
+
+      const netMarks = (correct * posFactor) - (wrong * negFactor);
+      const accuracy = attempted > 0 ? Math.round((correct / attempted) * 100) : 0;
+
+      return { correct, wrong, attempted, netMarks, accuracy, posFactor, negFactor };
+    }
+
+    function updateScorePreview() {
+      const { attempted, netMarks, accuracy } = calculateScores();
+      const left = currentQuestions.length - attempted;
+
+      document.getElementById('statAttempted').innerText = attempted;
+      document.getElementById('statLeft').innerText = left;
+      document.getElementById('statReview').innerText = markedForReview.size;
+      document.getElementById('statAccuracy').innerText = `${accuracy}%`;
+
+      const scoreTag = document.getElementById('currentScorePreview');
+      scoreTag.innerText = `Net: ${netMarks >= 0 ? '+' : ''}${netMarks.toFixed(2)}`;
+      scoreTag.className = `font-mono text-xs font-bold ${netMarks >= 0 ? 'text-blue-900' : 'text-red-700'}`;
+    }
+
+    function submitFullMockExam() {
+      isExamSubmitted = true;
+      if (timerInterval) clearInterval(timerInterval);
+
+      const { correct, wrong, attempted, netMarks, accuracy, posFactor, negFactor } = calculateScores();
+
+      // Populate Modal Fields
+      document.getElementById('modalNetScore').innerText = `${netMarks >= 0 ? '+' : ''}${netMarks.toFixed(2)}`;
+      document.getElementById('modalAccuracy').innerText = `${accuracy}%`;
+      document.getElementById('modalCorrect').innerText = correct;
+      document.getElementById('modalWrong').innerText = wrong;
+      document.getElementById('modalPositiveFactor').innerText = `+${posFactor.toFixed(2)} per right`;
+      document.getElementById('modalNegativeFactor').innerText = `-${negFactor.toFixed(2)} penalty`;
+
+      // Cutoff Analysis Box
+      const cutoffBox = document.getElementById('cutoffNoticeCard');
+      if (currentPaper === 'CSAT') {
+        const passMarks = 66.0; // 33% of 200 marks
+        if (netMarks >= passMarks) {
+          cutoffBox.className = "p-4 rounded-xl border bg-emerald-50 border-emerald-300 text-emerald-900 text-xs";
+          cutoffBox.innerHTML = `<strong>🎉 QUALIFIED CSAT!</strong> You scored ${netMarks.toFixed(2)} marks, safely surpassing the mandatory 33% qualifying benchmark (66.00 / 200 marks).`;
+        } else {
+          cutoffBox.className = "p-4 rounded-xl border bg-rose-50 border-rose-300 text-rose-900 text-xs";
+          cutoffBox.innerHTML = `<strong>⚠️ CSAT CRITICAL WARNING:</strong> Your net score is ${netMarks.toFixed(2)} marks, falling below the mandatory qualifying cutoff of 66.00 marks (33%). Focus on improving Reading Comprehension and basic quantitative accuracy.`;
+        }
+      } else {
+        if (netMarks >= 95.0) {
+          cutoffBox.className = "p-4 rounded-xl border bg-emerald-50 border-emerald-300 text-emerald-900 text-xs";
+          cutoffBox.innerHTML = `<strong>🏆 EXCELLENT PERFORMANCE!</strong> With ${netMarks.toFixed(2)} marks, your score is well positioned above conventional UPSC Prelims General category cutoffs (typically 85-92 marks).`;
+        } else if (netMarks >= 75.0) {
+          cutoffBox.className = "p-4 rounded-xl border bg-amber-50 border-amber-300 text-amber-900 text-xs";
+          cutoffBox.innerHTML = `<strong>👍 PROMISING SCORE:</strong> You secured ${netMarks.toFixed(2)} marks. To be safely inside the cutoff margin, minimize blind guesses to reduce negative penalties.`;
+        } else {
+          cutoffBox.className = "p-4 rounded-xl border bg-blue-50 border-blue-300 text-blue-900 text-xs";
+          cutoffBox.innerHTML = `<strong>📚 REVISION REQUIRED:</strong> Score: ${netMarks.toFixed(2)}. In UPSC CSE, negative marking (-0.66 per question) severely penalizes random guesses. Review the detailed solutions to fortify core NCERT concepts.`;
+        }
+      }
+
+      // Subject-wise Breakdown
+      const subjStats = {};
+      currentQuestions.forEach(q => {
+        if (!subjStats[q.subject]) {
+          subjStats[q.subject] = { total: 0, correct: 0 };
+        }
+        subjStats[q.subject].total++;
+        if (userAnswers[q.id] === q.correct) {
+          subjStats[q.subject].correct++;
+        }
+      });
+
+      const subjContainer = document.getElementById('subjectBreakdownContainer');
+      subjContainer.innerHTML = '';
+      Object.keys(subjStats).forEach(s => {
+        const stat = subjStats[s];
+        const pct = Math.round((stat.correct / stat.total) * 100);
+        const row = document.createElement('div');
+        row.innerHTML = `
+          <div class="flex justify-between text-slate-600 mb-1">
+            <span>${s}</span>
+            <span class="font-mono font-bold">${stat.correct} / ${stat.total} (${pct}%)</span>
+          </div>
+          <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+            <div class="bg-blue-900 h-full rounded-full" style="width: ${pct}%"></div>
+          </div>
+        `;
+        subjContainer.appendChild(row);
+      });
+
+      // Update OMR to show Green/Red
+      renderOMRGrid();
+      displayQuestion(activeQuestionIndex);
+      document.getElementById('scorecardModal').classList.remove('hidden');
+    }
+
+    function enterSolutionReviewMode() {
+      document.getElementById('scorecardModal').classList.add('hidden');
+      displayQuestion(0);
+    }
+
+    function restartTest() {
+      if (confirm("Reset current test and start fresh?")) {
+        userAnswers = {};
+        markedForReview.clear();
+        isExamSubmitted = false;
+        document.getElementById('scorecardModal').classList.add('hidden');
+        initTimer(120);
+        renderOMRGrid();
+        displayQuestion(0);
+        updateScorePreview();
+      }
+    }
+
+    /* =========================================================================
+       GEMINI API INTEGRATION (BYOK - ZERO HOSTING COST)
+       ========================================================================= */
+    const STORAGE_KEY_GEMINI = "UPSC_GEMINI_API_KEY";
+
+    function loadStoredApiKey() {
+      const key = localStorage.getItem(STORAGE_KEY_GEMINI);
+      if (key) {
+        document.getElementById('geminiApiKeyInput').value = key;
+      }
+    }
+
+    function getApiKey() {
+      return localStorage.getItem(STORAGE_KEY_GEMINI) || "";
+    }
+
+    function saveSettings() {
+      const key = document.getElementById('geminiApiKeyInput').value.trim();
+      localStorage.setItem(STORAGE_KEY_GEMINI, key);
+
+      const paper = document.getElementById('paperModeSelect').value;
+      currentPaper = paper;
+      document.getElementById('headerPaperBadge').innerText = paper === 'CSAT' ? 'CSAT Paper-2' : 'GS Paper-1';
+
+      const timerVal = document.getElementById('timerPresetSelect').value;
+      initTimer(timerVal);
+
+      closeSettingsModal();
+      showToast("Settings and API key saved successfully!", "success");
+      displayQuestion(activeQuestionIndex);
+    }
+
+    function selectStudyMode(mode) {
+      currentStudyMode = mode;
+      const pBtn = document.getElementById('modePracticeBtn');
+      const eBtn = document.getElementById('modeExamBtn');
+      const badge = document.getElementById('studyModeBadge');
+
+      if (mode === 'PRACTICE') {
+        pBtn.className = "p-2 rounded-lg border text-left bg-blue-50 border-blue-600 text-blue-900 font-bold";
+        eBtn.className = "p-2 rounded-lg border text-left bg-slate-50 border-slate-300 text-slate-700";
+        badge.innerText = "Bit-by-Bit Mode";
+        badge.className = "px-2 py-0.5 rounded font-mono font-bold text-[11px] bg-emerald-50 text-emerald-800 border border-emerald-200";
+      } else {
+        eBtn.className = "p-2 rounded-lg border text-left bg-blue-50 border-blue-600 text-blue-900 font-bold";
+        pBtn.className = "p-2 rounded-lg border text-left bg-slate-50 border-slate-300 text-slate-700";
+        badge.innerText = "Timed UPSC Mock";
+        badge.className = "px-2 py-0.5 rounded font-mono font-bold text-[11px] bg-blue-50 text-blue-900 border border-blue-200";
+      }
+    }
+
+    async function triggerGeminiGeneration() {
+      const apiKey = getApiKey();
+      if (!apiKey) {
+        alert("Please enter your Gemini API Key in Settings first. You can get a free key from Google AI Studio.");
+        closeAiGeneratorModal();
+        openSettingsModal();
+        return;
+      }
+
+      const topic = document.getElementById('aiTopicInput').value.trim() || "Mixed UPSC High Yield Syllabus";
+      const paper = document.getElementById('aiPaperType').value;
+      const count = parseInt(document.getElementById('aiQuestionCount').value, 10);
+      const style = document.getElementById('aiQuestionStyle').value;
+
+      const statusBox = document.getElementById('aiGenStatus');
+      const statusText = document.getElementById('aiGenStatusText');
+      const genBtn = document.getElementById('generateBtn');
+
+      statusBox.classList.remove('hidden');
+      statusText.innerText = `Prompting Gemini to compose ${count} standard ${paper} questions...`;
+      genBtn.disabled = true;
+
+      const systemPrompt = `You are an elite UPSC Civil Services Examination (CSE) paper-setter for ${paper === 'CSAT' ? 'CSAT Paper 2' : 'General Studies Paper 1'}.
+Generate strictly authentic UPSC-style Multiple Choice Questions.
+- Format style requested: ${style}.
+- For GS-1: Use statement-based items ("1 and 2 only", "How many of the above are correct?"), Assertion-Reasoning, or pair matching. Ensure high conceptual rigor, standard NCERT/Government source citations, and clear elimination rationale for wrong options.
+- For CSAT: Include realistic analytical reading passages or quantitative/reasoning problems.
+- Return ONLY valid JSON adhering to the specified schema, without markdown formatting or code fences.`;
+
+      const userQuery = `Create ${count} original UPSC Prelims MCQs on the topic: "${topic}".
+Output MUST be an array of objects matching this JSON structure:
+[
+  {
+    "id": 1,
+    "paper": "${paper}",
+    "subject": "${paper === 'CSAT' ? 'CSAT-Quant' : 'Polity'}",
+    "passage": "Optional passage text if CSAT RC, else empty string",
+    "question": "Question text (can include <br> for statements)",
+    "options": ["Option A", "Option B", "Option C", "Option D"],
+    "correct": 0, // Integer 0 for A, 1 for B, 2 for C, 3 for D
+    "explanation": "Detailed explanation with reasons why other options are wrong",
+    "source": "NCERT / The Hindu / Standard Reference",
+    "elimination": "Key elimination tip for UPSC candidates"
+  }
+]`;
+
+      const payload = {
+        contents: [{ parts: [{ text: userQuery }] }],
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        generationConfig: {
+          responseMimeType: "application/json",
+          temperature: 0.3
+        }
+      };
+
+      try {
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          throw new Error(`Gemini API Error HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const jsonText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (!jsonText) {
+          throw new Error("No content received from Gemini.");
+        }
+
+        const parsedQuestions = JSON.parse(jsonText);
+
+        if (Array.isArray(parsedQuestions) && parsedQuestions.length > 0) {
+          // Re-index questions consecutively
+          const formatted = parsedQuestions.map((item, i) => ({
+            ...item,
+            id: i + 1,
+            paper: paper
+          }));
+
+          currentQuestions = formatted;
+          currentPaper = paper;
+          userAnswers = {};
+          markedForReview.clear();
+          isExamSubmitted = false;
+
+          document.getElementById('headerPaperBadge').innerText = paper === 'CSAT' ? 'CSAT Paper-2' : 'GS Paper-1';
+          renderOMRGrid();
+          displayQuestion(0);
+          updateScorePreview();
+
+          closeAiGeneratorModal();
+          showToast(`✨ Generated ${formatted.length} UPSC questions on "${topic}"!`, "success");
+        } else {
+          throw new Error("Invalid question format received.");
+        }
+      } catch (err) {
+        console.error(err);
+        alert(`Question Generation Failed: ${err.message}. Please verify your API Key and network connection.`);
+      } finally {
+        statusBox.classList.add('hidden');
+        genBtn.disabled = false;
+      }
+    }
+
+    /* =========================================================================
+       MODAL CONTROLLERS & TOASTS
+       ========================================================================= */
+    function openSettingsModal() {
+      document.getElementById('settingsModal').classList.remove('hidden');
+    }
+    function closeSettingsModal() {
+      document.getElementById('settingsModal').classList.add('hidden');
+    }
+
+    function openAiGeneratorModal() {
+      document.getElementById('aiGenModal').classList.remove('hidden');
+    }
+    function closeAiGeneratorModal() {
+      document.getElementById('aiGenModal').classList.add('hidden');
+    }
+
+    function showToast(msg, type = "info") {
+      const toast = document.getElementById('toastNotification');
+      const msgEl = document.getElementById('toastMessage');
+      const iconEl = document.getElementById('toastIcon');
+
+      msgEl.innerText = msg;
+      iconEl.innerText = type === 'success' ? '✅' : type === 'alert' ? '🚨' : type === 'warning' ? '⚠️' : 'ℹ️';
+
+      toast.classList.remove('hidden');
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 4000);
+    }
+  </script>
+</body>
+</html>
